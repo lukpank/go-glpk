@@ -22,6 +22,11 @@ To install glpk package run
 
     go get github.com/lukpank/go-glpk/glpk
 
+## Documentation
+
+Documentation for glpk package is
+[available on godoc.org](http://godoc.org/github.com/lukpank/go-glpk/glpk).
+
 ## Example
 
 This example is a Go rewrite of the PyGLPK example from

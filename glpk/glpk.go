@@ -511,6 +511,7 @@ func (p *Prob) Simplex(parm *Smcp) error {
 	} else {
 		return err
 	}
+	panic("Should not get here") // to compile with go1.0.2
 }
 
 // Exact solves LP with Simplex method using exact (rational)
@@ -533,6 +534,7 @@ func (p *Prob) Exact(parm *Smcp) error {
 	} else {
 		return err
 	}
+	panic("Should not get here") // to compile with go1.0.2
 }
 
 // Smcp represents simplex solver control parameters, a set of

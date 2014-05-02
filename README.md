@@ -11,6 +11,17 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or (at
 your option) any later version.
 
+## Instalation
+
+First install [GLPK](http://www.gnu.org/software/glpk/) (GNU Linear
+Programming Kit). Package glpk is known to work with GLPK v4.54
+(available in Debian Sid) and v4.45 (available in Debian Wheezy).  On
+Debian GLPK can be installed by installing the package `libglpk-dev`.
+
+To install glpk package run
+
+    go get github.com/lukpank/go-glpk/glpk
+
 ## Example
 
 This example is a Go rewrite of the PyGLPK example from

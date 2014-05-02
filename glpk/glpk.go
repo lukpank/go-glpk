@@ -24,6 +24,8 @@
 // along with glpk package. If not, see <http://www.gnu.org/licenses/>.
 
 // Go bindings for GLPK (GNU Linear Programming Kit).
+// 
+// For a usage example see https://github.com/lukpank/go-glpk#example.
 //
 // The binding is not complete but enough for my purposes. Fill free
 // to contact me if there is some part of GLPK that you would like to

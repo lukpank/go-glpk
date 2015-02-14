@@ -24,7 +24,7 @@
 // along with glpk package. If not, see <http://www.gnu.org/licenses/>.
 
 // Go bindings for GLPK (GNU Linear Programming Kit).
-// 
+//
 // For a usage example see https://github.com/lukpank/go-glpk#example.
 //
 // The binding is not complete but enough for my purposes. Fill free
@@ -77,6 +77,14 @@ const (
 	NOFEAS = SolStat(C.GLP_NOFEAS) // NOFEAS indicates that there is no feasible solution
 	OPT    = SolStat(C.GLP_OPT)    // OPT indicates that the solution is optimal
 	UNBND  = SolStat(C.GLP_UNBND)  // UNBND indicates that the problem has unbounded solution
+)
+
+type VarType int
+
+const (
+	CV = VarType(C.GLP_CV) // Contineous variable
+	IV = VarType(C.GLP_IV) // Integer Variable
+	BV = VarType(C.GLP_BV) // Binary Variable. Equivalent to GLO_IV with 0<=iv<=1
 )
 
 type prob struct {
@@ -188,6 +196,14 @@ func (p *Prob) SetColName(j int, name string) {
 	s := C.CString(name)
 	defer C.free(unsafe.Pointer(s))
 	C.glp_set_col_name(p.p.p, C.int(j), s)
+}
+
+// SetColName sets j-th column (variable) name.
+func (p *Prob) SetColKind(j int, kind VarType) {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	C.glp_set_col_kind(p.p.p, C.int(j), C.int(kind))
 }
 
 // SetRowBnds sets row bounds
@@ -688,3 +704,46 @@ func (p *Prob) ColPrim(j int) float64 {
 // TODO:
 // glp_get_col_dual
 // ...
+
+const (
+	ON  = int(C.GLP_ON)
+	OFF = int(C.GLP_OFF)
+)
+
+type Iocp C.glp_iocp
+
+func (p *Iocp) Presolve() int {
+	return int(p.presolve)
+}
+
+func (p *Iocp) SetPresolve(flag int) {
+	p.presolve = C.int(flag)
+}
+
+func Init_iocp(param *Iocp) {
+	C.glp_init_iocp((*C.glp_iocp)(param))
+}
+
+func (p *Prob) Intopt(param *Iocp) int {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	err := C.glp_intopt(p.p.p, (*C.glp_iocp)(param))
+	return int(err)
+}
+
+func (p *Prob) MipColVal(i int) float64 {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	val := C.glp_mip_col_val(p.p.p, C.int(i))
+	return float64(val)
+}
+
+func (p *Prob) MipObjVal() float64{
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	val := C.glp_mip_obj_val(p.p.p)
+	return float64(val)
+}

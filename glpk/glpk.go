@@ -24,7 +24,7 @@
 // along with glpk package. If not, see <http://www.gnu.org/licenses/>.
 
 // Go bindings for GLPK (GNU Linear Programming Kit).
-// 
+//
 // For a usage example see https://github.com/lukpank/go-glpk#example.
 //
 // The binding is not complete but enough for my purposes. Fill free
@@ -77,6 +77,14 @@ const (
 	NOFEAS = SolStat(C.GLP_NOFEAS) // NOFEAS indicates that there is no feasible solution
 	OPT    = SolStat(C.GLP_OPT)    // OPT indicates that the solution is optimal
 	UNBND  = SolStat(C.GLP_UNBND)  // UNBND indicates that the problem has unbounded solution
+)
+
+type VarType int
+
+const (
+	CV = VarType(C.GLP_CV) // Contineous variable
+	IV = VarType(C.GLP_IV) // Integer Variable
+	BV = VarType(C.GLP_BV) // Binary Variable. Equivalent to GLO_IV with 0<=iv<=1
 )
 
 type prob struct {
@@ -188,6 +196,15 @@ func (p *Prob) SetColName(j int, name string) {
 	s := C.CString(name)
 	defer C.free(unsafe.Pointer(s))
 	C.glp_set_col_name(p.p.p, C.int(j), s)
+}
+
+// SetColKind sets the kind of j-th column
+// as specified by the VarType parameter kind.
+func (p *Prob) SetColKind(j int, kind VarType) {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	C.glp_set_col_kind(p.p.p, C.int(j), C.int(kind))
 }
 
 // SetRowBnds sets row bounds
@@ -688,3 +705,73 @@ func (p *Prob) ColPrim(j int) float64 {
 // TODO:
 // glp_get_col_dual
 // ...
+
+// Iocp represents MIP solver control parameters, a set of
+// parameters for Prob.Intopt(). Please use
+// NewIocp() to create Iocp structure which is properly initialized.
+type Iocp struct{
+	iocp C.glp_iocp
+}
+
+// Checks whether the optional MIP presolver is enabled.
+func (p *Iocp) Presolve() bool {
+	if p.iocp.presolve == C.GLP_ON{
+		return true
+	}
+	return false
+}
+
+// Enables or disables the optional MIP presolver.
+func (p *Iocp) SetPresolve(on bool) {
+	if on {
+		p.iocp.presolve = C.GLP_ON
+	}else{
+		p.iocp.presolve = C.GLP_OFF
+	}
+}
+
+// Create and initialize a new Iocp struct, which is used 
+// by the branch-and-cut solver.
+func NewIocp() *Iocp{
+	p := new(Iocp)
+	C.glp_init_iocp(&p.iocp)
+	return p
+}
+
+// Solve MIP problem with the branch-and-cut method.
+func (p *Prob) Intopt(params *Iocp) error {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	err := OptError(C.glp_intopt(p.p.p, &params.iocp))
+	if err != 0 {
+		return err
+	}
+	return nil
+}
+
+// MipStatus returns status of a MIP solution.
+func (p *Prob) MipStatus() SolStat {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	return SolStat(C.glp_mip_status(p.p.p))
+}
+
+// Returns value of the j-th column for MIP solution.
+func (p *Prob) MipColVal(i int) float64 {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	val := C.glp_mip_col_val(p.p.p, C.int(i))
+	return float64(val)
+}
+
+// Returns value of the objective function for MIP solution.
+func (p *Prob) MipObjVal() float64{
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	val := C.glp_mip_obj_val(p.p.p)
+	return float64(val)
+}

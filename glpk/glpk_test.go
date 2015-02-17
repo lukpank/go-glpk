@@ -302,6 +302,92 @@ func TestExample(t *testing.T) {
 	lp2.Delete()
 }
 
+// TestExample is a Go rewrite of the glpk mip example written
+// by Masahiro Sakai. https://gist.github.com/msakai/2450935 
+// (glpk-mip-sample.c).
+func TestIntop(t *testing.T){
+	/*
+	Maximize
+	 obj: x1 + 2 x2 + 3 x3 + x4
+	Subject To
+	 c1: - x1 + x2 + x3 + 10 x4 <= 20
+	 c2: x1 - 3 x2 + x3 <= 30
+	 c3: x2 - 3.5 x4 = 0
+	Bounds
+	 0 <= x1 <= 40
+	 2 <= x4 <= 3
+	General
+	 x4
+	End
+	*/ 
+	lp := New()
+	lp.SetProbName("sample")
+	lp.SetObjName("Z")
+	lp.SetObjDir(MAX)
+
+	if n := lp.AddRows(3); n != 1 {
+		t.Errorf("expected 0 but got %d", n)
+	}
+	lp.SetRowName(1, "c1")
+	lp.SetRowBnds(1, DB, 0.0, 20.0)
+	lp.SetRowName(2, "c2")
+	lp.SetRowBnds(2, DB, 0.0, 30.0)
+	lp.SetRowName(3, "c3")
+	lp.SetRowBnds(3, FX, 0.0, 0)
+
+	if n := lp.AddCols(4); n != 1 {
+		t.Errorf("expected 0 but got %d", n)
+	}
+
+	lp.SetColName(1, "x1")
+	lp.SetColBnds(1, DB, 0.0, 40.0)
+	lp.SetObjCoef(1, 1.0);
+	lp.SetColName(2, "x2")
+	lp.SetColBnds(2, LO, 0.0, 0.0)
+	lp.SetObjCoef(2, 2.0);
+	lp.SetColName(3, "x3")
+	lp.SetColBnds(3, LO, 0.0, 0.0)
+	lp.SetObjCoef(3, 3.0);
+	lp.SetColName(4, "x4")
+	lp.SetColBnds(4, DB, 2.0, 3.0)
+	lp.SetObjCoef(4, 1.0);
+	lp.SetColKind(4, IV);
+
+	ind := []int32{0, 1, 2, 3, 4}
+	mat := [][]float64{
+		{0, -1, 1.0, 1.0, 10},
+		{0, 1.0, -3.0, 1.0, 0.0},
+		{0, 0.0, 1.0, 0.0, -3.5}}
+	for i := 0; i < 3; i++ {
+		lp.SetMatRow(i+1, ind, mat[i])
+	}
+
+	iocp := NewIocp()
+	iocp.SetPresolve(true)
+	
+	if err := lp.Intopt(iocp); err != nil {
+		t.Errorf("Mip error: %v", err)
+	}	
+
+ 	CheckMipSolution(t, lp)
+
+	lp.Delete()
+}
+
+func CheckMipSolution(t *testing.T, lp *Prob) {
+	state := lp.MipStatus()
+	if state != OPT && state != FEAS {
+		t.Errorf("expected optimal solution, but got %d", lp.MipStatus())
+	}
+	
+	// z = 122.5; x1 = 40; x2 = 10.5; x3 = 19.5, x4 = 3
+	CheckClose(t, lp.MipObjVal(), 122.5)
+	CheckClose(t, lp.MipColVal(1), 40)
+	CheckClose(t, lp.MipColVal(2), 10.5)
+	CheckClose(t, lp.MipColVal(3), 19.5)
+	CheckClose(t, lp.MipColVal(4), 3)
+}
+
 func TestGarbageCollection(t *testing.T) {
 	// this loop should create enough objects to trigger garbage collection
 	for i := 0; i < 2000; i++ {

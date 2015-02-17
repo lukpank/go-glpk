@@ -198,7 +198,8 @@ func (p *Prob) SetColName(j int, name string) {
 	C.glp_set_col_name(p.p.p, C.int(j), s)
 }
 
-// SetColName sets j-th column (variable) name.
+// SetColKind sets the kind of j-th column
+// as specified by the VarType parameter kind.
 func (p *Prob) SetColKind(j int, kind VarType) {
 	if p.p.p == nil {
 		panic("Prob method called on a deleted problem")
@@ -705,33 +706,59 @@ func (p *Prob) ColPrim(j int) float64 {
 // glp_get_col_dual
 // ...
 
-const (
-	ON  = int(C.GLP_ON)
-	OFF = int(C.GLP_OFF)
-)
-
-type Iocp C.glp_iocp
-
-func (p *Iocp) Presolve() int {
-	return int(p.presolve)
+// Iocp represents MIP solver control parameters, a set of
+// parameters for Prob.Intopt(). Please use
+// NewIocp() to create Iocp structure which is properly initialized.
+type Iocp struct{
+	iocp C.glp_iocp
 }
 
-func (p *Iocp) SetPresolve(flag int) {
-	p.presolve = C.int(flag)
+// Checks whether the optional MIP presolver is enabled.
+func (p *Iocp) Presolve() bool {
+	if p.iocp.presolve == C.GLP_ON{
+		return true
+	}
+	return false
 }
 
-func Init_iocp(param *Iocp) {
-	C.glp_init_iocp((*C.glp_iocp)(param))
+// Enables or disables the optional MIP presolver.
+func (p *Iocp) SetPresolve(on bool) {
+	if on {
+		p.iocp.presolve = C.GLP_ON
+	}else{
+		p.iocp.presolve = C.GLP_OFF
+	}
 }
 
-func (p *Prob) Intopt(param *Iocp) int {
+// Create and initialize a new Iocp struct, which is used 
+// by the branch-and-cut solver.
+func NewIocp() *Iocp{
+	p := new(Iocp)
+	C.glp_init_iocp(&p.iocp)
+	return p
+}
+
+// Solve MIP problem with the branch-and-cut method.
+func (p *Prob) Intopt(params *Iocp) error {
 	if p.p.p == nil {
 		panic("Prob method called on a deleted problem")
 	}
-	err := C.glp_intopt(p.p.p, (*C.glp_iocp)(param))
-	return int(err)
+	err := OptError(C.glp_intopt(p.p.p, &params.iocp))
+	if err != 0 {
+		return err
+	}
+	return nil
 }
 
+// MipStatus returns status of a MIP solution.
+func (p *Prob) MipStatus() SolStat {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	return SolStat(C.glp_mip_status(p.p.p))
+}
+
+// Returns value of the j-th column for MIP solution.
 func (p *Prob) MipColVal(i int) float64 {
 	if p.p.p == nil {
 		panic("Prob method called on a deleted problem")
@@ -740,6 +767,7 @@ func (p *Prob) MipColVal(i int) float64 {
 	return float64(val)
 }
 
+// Returns value of the objective function for MIP solution.
 func (p *Prob) MipObjVal() float64{
 	if p.p.p == nil {
 		panic("Prob method called on a deleted problem")

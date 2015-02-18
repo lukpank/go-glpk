@@ -302,6 +302,29 @@ func TestExample(t *testing.T) {
 	lp2.Delete()
 }
 
+func TestSetGetColKind(t *testing.T) {
+	lp := New()
+	lp.AddCols(3)
+	for i, v := range []VarType{CV, IV, BV} {
+		lp.SetColKind(i+1, v)
+		if got := lp.ColKind(i + 1); got != v {
+			t.Errorf("expected %v but got %v", v, got)
+		}
+	}
+	lp.Delete()
+
+}
+
+func TestIocp(t *testing.T) {
+	iocp := NewIocp()
+	for _, v := range []bool{false, true} {
+		iocp.SetPresolve(v)
+		if got := iocp.Presolve(); got != v {
+			t.Errorf("expected %v but got %v", v, got)
+		}
+	}
+}
+
 // TestExample is a Go rewrite of the glpk mip example written
 // by Masahiro Sakai. https://gist.github.com/msakai/2450935
 // (glpk-mip-sample.c).

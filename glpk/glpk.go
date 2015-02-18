@@ -363,6 +363,14 @@ func (p *Prob) ColName(j int) string {
 	return C.GoString(C.glp_get_col_name(p.p.p, C.int(j)))
 }
 
+// ColKind returns the kind of j-th column
+func (p *Prob) ColKind(j int) VarType {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	return VarType(C.glp_get_col_kind(p.p.p, C.int(j)))
+}
+
 // TODO:
 // glp_get_row_type
 // glp_get_row_lb

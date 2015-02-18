@@ -303,23 +303,23 @@ func TestExample(t *testing.T) {
 }
 
 // TestExample is a Go rewrite of the glpk mip example written
-// by Masahiro Sakai. https://gist.github.com/msakai/2450935 
+// by Masahiro Sakai. https://gist.github.com/msakai/2450935
 // (glpk-mip-sample.c).
-func TestIntop(t *testing.T){
+func TestIntop(t *testing.T) {
 	/*
-	Maximize
-	 obj: x1 + 2 x2 + 3 x3 + x4
-	Subject To
-	 c1: - x1 + x2 + x3 + 10 x4 <= 20
-	 c2: x1 - 3 x2 + x3 <= 30
-	 c3: x2 - 3.5 x4 = 0
-	Bounds
-	 0 <= x1 <= 40
-	 2 <= x4 <= 3
-	General
-	 x4
-	End
-	*/ 
+		Maximize
+		 obj: x1 + 2 x2 + 3 x3 + x4
+		Subject To
+		 c1: - x1 + x2 + x3 + 10 x4 <= 20
+		 c2: x1 - 3 x2 + x3 <= 30
+		 c3: x2 - 3.5 x4 = 0
+		Bounds
+		 0 <= x1 <= 40
+		 2 <= x4 <= 3
+		General
+		 x4
+		End
+	*/
 	lp := New()
 	lp.SetProbName("sample")
 	lp.SetObjName("Z")
@@ -341,17 +341,17 @@ func TestIntop(t *testing.T){
 
 	lp.SetColName(1, "x1")
 	lp.SetColBnds(1, DB, 0.0, 40.0)
-	lp.SetObjCoef(1, 1.0);
+	lp.SetObjCoef(1, 1.0)
 	lp.SetColName(2, "x2")
 	lp.SetColBnds(2, LO, 0.0, 0.0)
-	lp.SetObjCoef(2, 2.0);
+	lp.SetObjCoef(2, 2.0)
 	lp.SetColName(3, "x3")
 	lp.SetColBnds(3, LO, 0.0, 0.0)
-	lp.SetObjCoef(3, 3.0);
+	lp.SetObjCoef(3, 3.0)
 	lp.SetColName(4, "x4")
 	lp.SetColBnds(4, DB, 2.0, 3.0)
-	lp.SetObjCoef(4, 1.0);
-	lp.SetColKind(4, IV);
+	lp.SetObjCoef(4, 1.0)
+	lp.SetColKind(4, IV)
 
 	ind := []int32{0, 1, 2, 3, 4}
 	mat := [][]float64{
@@ -364,12 +364,12 @@ func TestIntop(t *testing.T){
 
 	iocp := NewIocp()
 	iocp.SetPresolve(true)
-	
+
 	if err := lp.Intopt(iocp); err != nil {
 		t.Errorf("Mip error: %v", err)
-	}	
+	}
 
- 	CheckMipSolution(t, lp)
+	CheckMipSolution(t, lp)
 
 	lp.Delete()
 }
@@ -379,7 +379,7 @@ func CheckMipSolution(t *testing.T, lp *Prob) {
 	if state != OPT && state != FEAS {
 		t.Errorf("expected optimal solution, but got %d", lp.MipStatus())
 	}
-	
+
 	// z = 122.5; x1 = 40; x2 = 10.5; x3 = 19.5, x4 = 3
 	CheckClose(t, lp.MipObjVal(), 122.5)
 	CheckClose(t, lp.MipColVal(1), 40)

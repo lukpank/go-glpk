@@ -709,13 +709,13 @@ func (p *Prob) ColPrim(j int) float64 {
 // Iocp represents MIP solver control parameters, a set of
 // parameters for Prob.Intopt(). Please use
 // NewIocp() to create Iocp structure which is properly initialized.
-type Iocp struct{
+type Iocp struct {
 	iocp C.glp_iocp
 }
 
 // Checks whether the optional MIP presolver is enabled.
 func (p *Iocp) Presolve() bool {
-	if p.iocp.presolve == C.GLP_ON{
+	if p.iocp.presolve == C.GLP_ON {
 		return true
 	}
 	return false
@@ -725,14 +725,14 @@ func (p *Iocp) Presolve() bool {
 func (p *Iocp) SetPresolve(on bool) {
 	if on {
 		p.iocp.presolve = C.GLP_ON
-	}else{
+	} else {
 		p.iocp.presolve = C.GLP_OFF
 	}
 }
 
-// Create and initialize a new Iocp struct, which is used 
+// Create and initialize a new Iocp struct, which is used
 // by the branch-and-cut solver.
-func NewIocp() *Iocp{
+func NewIocp() *Iocp {
 	p := new(Iocp)
 	C.glp_init_iocp(&p.iocp)
 	return p
@@ -768,7 +768,7 @@ func (p *Prob) MipColVal(i int) float64 {
 }
 
 // Returns value of the objective function for MIP solution.
-func (p *Prob) MipObjVal() float64{
+func (p *Prob) MipObjVal() float64 {
 	if p.p.p == nil {
 		panic("Prob method called on a deleted problem")
 	}

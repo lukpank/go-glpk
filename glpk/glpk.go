@@ -79,6 +79,7 @@ const (
 	UNBND  = SolStat(C.GLP_UNBND)  // UNBND indicates that the problem has unbounded solution
 )
 
+// Variable type (kind)
 type VarType int
 
 const (

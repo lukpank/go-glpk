@@ -27,7 +27,9 @@ To install glpk package run
 Documentation for glpk package is
 [available on godoc.org](http://godoc.org/github.com/lukpank/go-glpk/glpk).
 
-## Example
+## Examples
+
+### Example with real-valued variables
 
 This example is a Go rewrite of the PyGLPK example from
 http://tfinley.net/software/pyglpk/discussion.html (Which is a Python
@@ -94,6 +96,131 @@ The output of this example is:
     *     2: obj =   7.333333333e+02  infeas =  0.000e+00 (0)
     OPTIMAL LP SOLUTION FOUND
     Z = 733.3333333333333; x0 = 33.333333333333336; x1 = 66.66666666666666; x2 = 0
+
+### MIP (Mixed Integer Programming) example
+
+This example is a Go rewrite of the glpk MIP (Mixed Integer
+Programming) example written by Masahiro Sakai. See
+[glpk-mip-sample.c](https://gist.github.com/msakai/2450935).
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/lukpank/go-glpk/glpk"
+)
+
+// Maximize
+//
+//      obj: x1 + 2 x2 + 3 x3 + x4
+//
+// Subject To
+//
+//      c1: 0 <= - x1 + x2 + x3 + 10 x4 <= 20
+//      c2: 0 <= x1 - 3 x2 + x3 <= 30
+//      c3: x2 - 3.5 x4 = 0
+//
+// Bounds
+//
+//      0 <= x1 <= 40
+//      x2 >= 0
+//      x3 >= 0
+//      2 <= x4 <= 3
+//
+// Type
+//
+//      x1, x2, x3 real
+//      x4 integer
+//
+// End
+func main() {
+	lp := glpk.New()
+	lp.SetProbName("sample")
+	lp.SetObjName("Z")
+	lp.SetObjDir(glpk.MAX)
+
+	lp.AddRows(3)
+	lp.SetRowName(1, "c1")
+	lp.SetRowBnds(1, glpk.UP, 0.0, 20.0)
+	lp.SetRowName(2, "c2")
+	lp.SetRowBnds(2, glpk.UP, 0.0, 30.0)
+	lp.SetRowName(3, "c3")
+	lp.SetRowBnds(3, glpk.FX, 0.0, 0)
+
+	lp.AddCols(4)
+	lp.SetColName(1, "x1")
+	lp.SetColBnds(1, glpk.DB, 0.0, 40.0)
+	lp.SetObjCoef(1, 1.0)
+	lp.SetColName(2, "x2")
+	lp.SetColBnds(2, glpk.LO, 0.0, 0.0)
+	lp.SetObjCoef(2, 2.0)
+	lp.SetColName(3, "x3")
+	lp.SetColBnds(3, glpk.LO, 0.0, 0.0)
+	lp.SetObjCoef(3, 3.0)
+	lp.SetColName(4, "x4")
+	lp.SetColBnds(4, glpk.DB, 2.0, 3.0)
+	lp.SetObjCoef(4, 1.0)
+	lp.SetColKind(4, glpk.IV)
+
+	fmt.Printf("col1: %v\n", lp.ColKind(1) == glpk.CV)
+
+	ind := []int32{0, 1, 2, 3, 4}
+	mat := [][]float64{
+		{0, -1, 1.0, 1.0, 10},
+		{0, 1.0, -3.0, 1.0, 0.0},
+		{0, 0.0, 1.0, 0.0, -3.5}}
+	for i := 0; i < 3; i++ {
+		lp.SetMatRow(i+1, ind, mat[i])
+	}
+
+	iocp := glpk.NewIocp()
+	iocp.SetPresolve(true)
+
+	if err := lp.Intopt(iocp); err != nil {
+		log.Fatalf("Mip error: %v", err)
+	}
+
+	fmt.Printf("%s = %g", lp.ObjName(), lp.MipObjVal())
+	for i := 0; i < 4; i++ {
+		fmt.Printf("; %s = %g", lp.ColName(i+1), lp.MipColVal(i+1))
+	}
+	fmt.Println()
+
+	lp.Delete()
+}
+```
+
+The output of this example is:
+
+```
+GLPK Integer Optimizer, v4.55
+3 rows, 4 columns, 9 non-zeros
+1 integer variable, none of which are binary
+Preprocessing...
+3 rows, 4 columns, 9 non-zeros
+1 integer variable, none of which are binary
+Scaling...
+ A: min|aij| =  1.000e+00  max|aij| =  1.000e+01  ratio =  1.000e+01
+Problem data seem to be well scaled
+Constructing initial basis...
+Size of triangular part is 3
+Solving LP relaxation...
+GLPK Simplex Optimizer, v4.55
+3 rows, 4 columns, 9 non-zeros
+      0: obj =   2.300000000e+01  infeas =  1.400e+01 (0)
+*     1: obj =   3.700000000e+01  infeas =  0.000e+00 (0)
+*     5: obj =   1.252083333e+02  infeas =  0.000e+00 (0)
+OPTIMAL LP SOLUTION FOUND
+Integer optimization begins...
++     5: mip =     not found yet <=              +inf        (1; 0)
++     6: >>>>>   1.225000000e+02 <=   1.225000000e+02 < 0.1% (2; 0)
++     6: mip =   1.225000000e+02 <=     tree is empty   0.0% (0; 3)
+INTEGER OPTIMAL SOLUTION FOUND
+Z = 122.5; x1 = 40; x2 = 10.5; x3 = 19.5; x4 = 3
+```
 
 ## About
 

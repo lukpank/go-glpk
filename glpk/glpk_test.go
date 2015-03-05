@@ -329,20 +329,31 @@ func TestIocp(t *testing.T) {
 // by Masahiro Sakai. https://gist.github.com/msakai/2450935
 // (glpk-mip-sample.c).
 func TestIntop(t *testing.T) {
-	/*
-		Maximize
-		 obj: x1 + 2 x2 + 3 x3 + x4
-		Subject To
-		 c1: - x1 + x2 + x3 + 10 x4 <= 20
-		 c2: x1 - 3 x2 + x3 <= 30
-		 c3: x2 - 3.5 x4 = 0
-		Bounds
-		 0 <= x1 <= 40
-		 2 <= x4 <= 3
-		General
-		 x4
-		End
-	*/
+
+	// Maximize
+	//
+	//      obj: x1 + 2 x2 + 3 x3 + x4
+	//
+	// Subject To
+	//
+	//      c1: 0 <= - x1 + x2 + x3 + 10 x4 <= 20
+	//      c2: 0 <= x1 - 3 x2 + x3 <= 30
+	//      c3: x2 - 3.5 x4 = 0
+	//
+	// Bounds
+	//
+	//      0 <= x1 <= 40
+	//      x2 >= 0
+	//      x3 >= 0
+	//      2 <= x4 <= 3
+	//
+	// Type
+	//
+	//      x1, x2, x3 real
+	//      x4 integer
+	//
+	// End
+
 	lp := New()
 	lp.SetProbName("sample")
 	lp.SetObjName("Z")

@@ -19,7 +19,9 @@ package glpk
 
 import (
 	"fmt"
+	"io/ioutil"
 	"math"
+	"os"
 	"testing"
 )
 
@@ -243,10 +245,10 @@ func CheckSolution(t *testing.T, lp *Prob) {
 	CheckClose(t, lp.ColPrim(3), 0)
 }
 
-// TestExample is a Go rewrite of the PyGLPK example from
+// PrepareTestExample is a Go rewrite of the PyGLPK example from
 // http://tfinley.net/software/pyglpk/discussion.html (Which is a
 // Python reimplementation of a C program from GLPK documentation)
-func TestExample(t *testing.T) {
+func PrepareTestExample(t *testing.T) *Prob {
 	lp := New()
 	lp.SetProbName("sample")
 	lp.SetObjName("Z")
@@ -284,22 +286,130 @@ func TestExample(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		lp.SetMatRow(i+1, ind, mat[i])
 	}
+	return lp
+}
 
+func CheckSimplexSolution(t *testing.T, lp *Prob) {
 	smcp := NewSmcp()
 	smcp.SetMsgLev(MSG_ERR)
-	lp2 := lp.Copy(true)
 
 	if err := lp.Simplex(smcp); err != nil {
 		t.Errorf("Simplex error: %v", err)
 	}
 	CheckSolution(t, lp)
+}
+
+func TestExample(t *testing.T) {
+	lp := PrepareTestExample(t)
+
+	lp2 := lp.Copy(true)
+	CheckSimplexSolution(t, lp)
 	lp.Delete()
+
+	smcp := NewSmcp()
+	smcp.SetMsgLev(MSG_ERR)
 
 	if err := lp2.Exact(smcp); err != nil {
 		t.Errorf("Exact error: %v", err)
 	}
 	CheckSolution(t, lp2)
 	lp2.Delete()
+}
+
+func TestReadWriteMPS(t *testing.T) {
+	lp := PrepareTestExample(t)
+	f1, err := ioutil.TempFile("", "glpk-test-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f1.Close()
+	defer os.Remove(f1.Name())
+	f2, err := ioutil.TempFile("", "glpk-test-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f2.Close()
+	defer os.Remove(f2.Name())
+	err = lp.WriteMPS(MPS_DECK, nil, f1.Name())
+	if err != nil {
+		t.Error(err)
+	}
+	err = lp.WriteMPS(MPS_FILE, NewMPSCP(), f2.Name())
+	if err != nil {
+		t.Error(err)
+	}
+	lp.Delete()
+
+	lp1 := New()
+	defer lp1.Delete()
+	err = lp1.ReadMPS(MPS_DECK, NewMPSCP(), f1.Name())
+	if err != nil {
+		t.Error(err)
+	} else {
+		lp1.SetObjDir(MAX)
+		CheckSimplexSolution(t, lp1)
+	}
+
+	lp2 := New()
+	defer lp2.Delete()
+	err = lp2.ReadMPS(MPS_FILE, nil, f2.Name())
+	if err != nil {
+		t.Error(err)
+	} else {
+		lp2.SetObjDir(MAX)
+		CheckSimplexSolution(t, lp2)
+	}
+}
+
+func TestReadWriteLP(t *testing.T) {
+	CheckReadWriteLP(t, nil)
+	CheckReadWriteLP(t, NewCPXCP())
+}
+
+func CheckReadWriteLP(t *testing.T, cpxcp *CPXCP) {
+	lp := PrepareTestExample(t)
+	f, err := ioutil.TempFile("", "glpk-test-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Close()
+	defer os.Remove(f.Name())
+	err = lp.WriteLP(cpxcp, f.Name())
+	if err != nil {
+		t.Error(err)
+	}
+	lp.Delete()
+
+	lp1 := New()
+	defer lp1.Delete()
+	err = lp1.ReadLP(cpxcp, f.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckSimplexSolution(t, lp1)
+}
+
+func TestReadWriteProb(t *testing.T) {
+	lp := PrepareTestExample(t)
+	f, err := ioutil.TempFile("", "glpk-test-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Close()
+	defer os.Remove(f.Name())
+	err = lp.WriteProb(0, f.Name())
+	if err != nil {
+		t.Error(err)
+	}
+	lp.Delete()
+
+	lp1 := New()
+	defer lp1.Delete()
+	err = lp1.ReadProb(0, f.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+	CheckSimplexSolution(t, lp1)
 }
 
 func TestSetGetColKind(t *testing.T) {

@@ -795,3 +795,186 @@ func (p *Prob) MipObjVal() float64 {
 	val := C.glp_mip_obj_val(p.p.p)
 	return float64(val)
 }
+
+// MPS file format: either fixed (ancient) or free (modern) format.
+type MPSFormat int
+
+const (
+	// MPS file format type (fixed or free). To read an MPS
+	// (fixed) file and switch to maximization (as MPS format does
+	// not specify objective function direction and GLPK assumes
+	// minimization) run
+	//
+	//     lp := glpk.New()
+	//     defer lp.Delete()
+	//     lp.ReadMPS(glpk.MPS_DECK, nil, "someMaximizationProblem.mps")
+	//     lp.SetObjDir(glpk.MAX)
+	//     if err := lp.Simplex(nil); err != nil {
+	//             log.Fatal(err)
+	//     }
+	//
+	MPS_DECK = MPSFormat(C.GLP_MPS_DECK) // fixed (ancient) MPS format
+	MPS_FILE = MPSFormat(C.GLP_MPS_FILE) // free (modern) MPS format
+)
+
+// PathError is the error used by methods reading and writing MPS,
+// CPLEX LP, and GPLK LP/MIP formats.
+type PathError struct {
+	Op      string // either "read" or "write"
+	Path    string // name of the file on which the operation was performed
+	Message string // short description of the problem
+}
+
+func (e *PathError) Error() string {
+	return e.Op + " " + e.Path + ": " + e.Message
+}
+
+// MPSCP represent MPS format control parameters
+type MPSCP struct {
+	mpscp C.glp_mpscp
+}
+
+// NewMPSCP creates new initialized MPSCP struct (MPS format control
+// parameters)
+func NewMPSCP() *MPSCP {
+	m := new(MPSCP)
+	C.glp_init_mpscp(&m.mpscp)
+	return m
+}
+
+// WriteMPS writes the problem instance into a file in MPS file
+// format.  The format argument specifies either the fixed or free MPS
+// format.  The params argument can be nil (could also be a value
+// returned by NewMPSCP() but at this point GLPK package does not
+// allow to specify any MPS parameters available in GLPK).
+//
+// Note that MPS format does not specify objective function direction
+// (minimization or maximization).
+func (p *Prob) WriteMPS(format MPSFormat, params *MPSCP, filename string) error {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	var parm *C.glp_mpscp
+	if params != nil {
+		parm = &params.mpscp
+	}
+	fname := C.CString(filename)
+	defer C.free(unsafe.Pointer(fname))
+	if C.glp_write_mps(p.p.p, C.int(format), parm, fname) != 0 {
+		return &PathError{"write", filename, "MPS writing error"}
+	}
+	return nil
+}
+
+// ReadMPS reads the problem instance from a file in MPS file format.
+// The format argument specifies either the fixed or free MPS format.
+// The params argument can be nil (could also be a value returned by
+// NewMPSCP() but at this point GLPK package does not allow to specify
+// any MPS parameters available in GLPK).
+//
+// Note that MPS format does not specify objective function direction
+// (minimization or maximization). GLPK assumes minimization, use
+// SetObjDir(glpk.MAX) to switch to maximization if needed.
+func (p *Prob) ReadMPS(format MPSFormat, params *MPSCP, filename string) error {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	var parm *C.glp_mpscp
+	if params != nil {
+		parm = &params.mpscp
+	}
+	fname := C.CString(filename)
+	defer C.free(unsafe.Pointer(fname))
+	if C.glp_read_mps(p.p.p, C.int(format), parm, fname) != 0 {
+		return &PathError{"read", filename, "MPS reading error"}
+	}
+	return nil
+}
+
+// CPXCP represent CPLEX LP format control parameters
+type CPXCP struct {
+	cpxcp C.glp_cpxcp
+}
+
+// NewCPXCP creates new initialized CPXCP struct (CPLEX LP format
+// control parameters)
+func NewCPXCP() *CPXCP {
+	m := new(CPXCP)
+	C.glp_init_cpxcp(&m.cpxcp)
+	return m
+}
+
+// WriteLP writes the problem instance into a file in CPLEX LP file
+// format. The params argument can be nil (could also be a value
+// returned by NewCPXCP() but it is reserved for future use and at
+// this point GLPK does allow to specify any CPLEX LP parameters).
+func (p *Prob) WriteLP(params *CPXCP, filename string) error {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	var parm *C.glp_cpxcp
+	if params != nil {
+		parm = &params.cpxcp
+	}
+	fname := C.CString(filename)
+	defer C.free(unsafe.Pointer(fname))
+	if C.glp_write_lp(p.p.p, parm, fname) != 0 {
+		return &PathError{"write", filename, "CPLEX LP writing error"}
+	}
+	return nil
+}
+
+// ReadLP reads the problem instance from a file in CPLEX LP file
+// format. The params argument can be nil (could also be a value
+// returned by NewCPXCP() but it is reserved for future use and at
+// this point GLPK does allow to specify any CPLEX LP parameters).
+func (p *Prob) ReadLP(params *CPXCP, filename string) error {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	var parm *C.glp_cpxcp
+	if params != nil {
+		parm = &params.cpxcp
+	}
+	fname := C.CString(filename)
+	defer C.free(unsafe.Pointer(fname))
+	if C.glp_read_lp(p.p.p, parm, fname) != 0 {
+		return &PathError{"read", filename, "CPLEX LP reading error"}
+	}
+	return nil
+}
+
+// ProbRWFlags represents flags used for reading and writing of the
+// problem instance in the GLPK LP/MIP format. Reserved for future use
+// for now zero value should be used.
+type ProbRWFlags int
+
+// WriteProb writes the problem instance into a file in GLPK LP/MIP
+// file format. The flags argument is reserved for future use, for now
+// zero value should be used.
+func (p *Prob) WriteProb(flags ProbRWFlags, filename string) error {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	fname := C.CString(filename)
+	defer C.free(unsafe.Pointer(fname))
+	if C.glp_write_prob(p.p.p, C.int(flags), fname) != 0 {
+		return &PathError{"write", filename, "GLPK LP/MIP writing error"}
+	}
+	return nil
+}
+
+// ReadProb reads the problem instance from a file in GLPK LP/MIP file
+// format. The flags argument is reserved for future use, for now zero
+// value should be used.
+func (p *Prob) ReadProb(flags ProbRWFlags, filename string) error {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	fname := C.CString(filename)
+	defer C.free(unsafe.Pointer(fname))
+	if C.glp_read_prob(p.p.p, C.int(flags), fname) != 0 {
+		return &PathError{"read", filename, "GLPK LP/MIP reading error"}
+	}
+	return nil
+}

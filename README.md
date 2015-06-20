@@ -97,6 +97,73 @@ The output of this example is:
     OPTIMAL LP SOLUTION FOUND
     Z = 733.3333333333333; x0 = 33.333333333333336; x1 = 66.66666666666666; x2 = 0
 
+### Reading the problem instance from a file
+
+The above problem in the CPLEX LP format has the follow form
+
+```
+\* Problem: sample *\
+
+Maximize
+ Z: + 10 x0 + 6 x1 + 4 x2
+
+Subject To
+ p: + x2 + x1 + x0 <= 100
+ q: + 5 x2 + 4 x1 + 10 x0 <= 600
+ r: + 6 x2 + 2 x1 + 2 x0 <= 300
+
+End
+```
+
+let us save it into `sample.lp` file. Then we can do the computation
+analogous to the previous example with the following shorter program:
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/lukpank/go-glpk/glpk"
+)
+
+func main() {
+	lp := glpk.New()
+	defer lp.Delete()
+	lp.ReadLP(nil, "sample.lp")
+
+	if err := lp.Simplex(nil); err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("%s = %g", lp.ObjName(), lp.ObjVal())
+	for i := 0; i < 3; i++ {
+		fmt.Printf("; %s = %g", lp.ColName(i+1), lp.ColPrim(i+1))
+	}
+	fmt.Println()
+}
+```
+
+Analogously you can read from a file in MPS or GPLK LP/MIP formats
+using `ReadMPS` or `ReadProb` methods.  You can also write the problem
+instance in MPS, CPLEX LP or GPLK LP/MIP formats by the corresponding
+`WriteMPS`, `WriteLP` and `WriteProb` methods.
+
+The output of this example is:
+
+```
+Reading problem data from 'sample.lp'...
+3 rows, 3 columns, 9 non-zeros
+11 lines were read
+GLPK Simplex Optimizer, v4.55
+3 rows, 3 columns, 9 non-zeros
+*     0: obj =   0.000000000e+00  infeas =  0.000e+00 (0)
+*     2: obj =   7.333333333e+02  infeas =  0.000e+00 (0)
+OPTIMAL LP SOLUTION FOUND
+Z = 733.3333333333333; x0 = 33.333333333333336; x1 = 66.66666666666666; x2 = 0
+```
+
 ### MIP (Mixed Integer Programming) example
 
 This example is a Go rewrite of the glpk MIP (Mixed Integer

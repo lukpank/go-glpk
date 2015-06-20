@@ -582,11 +582,13 @@ const (
 	// Message levels (default: glpk.MSG_ALL). Usage example:
 	//
 	//     lp := glpk.New()
+	//     defer lp.Delete()
 	//     ...
 	//     smcp := glpk.NewSmcp()
 	//     smcp.SetMsgLev(glpk.MSG_ERR)
-	//     lp.Simplex(smcp)
-	//
+	//     if err := lp.Simplex(smcp); err != nil {
+	//             log.Fatal(err)
+	//     }
 	MSG_OFF = MsgLev(C.GLP_MSG_OFF) // no output
 	MSG_ERR = MsgLev(C.GLP_MSG_ERR) // warning and error messages only
 	MSG_ON  = MsgLev(C.GLP_MSG_ON)  // normal output
@@ -607,10 +609,13 @@ const (
 	// Simplex method options (default: glpk.PRIMAL). Usage example:
 	//
 	//     lp := glpk.New()
+	//     defer lp.Delete()
 	//     ...
 	//     smcp := glpk.NewSmcp()
 	//     smcp.SetMeth(glpk.DUALP)
-	//     lp.Simplex(smcp)
+	//     if err := lp.Simplex(smcp); err != nil {
+	//             log.Fatal(err)
+	//     }
 	//
 	PRIMAL = Meth(C.GLP_PRIMAL) // use primal simplex
 	DUALP  = Meth(C.GLP_DUALP)  // use dual; if it fails, use primal
@@ -629,10 +634,13 @@ const (
 	// Pricing techniques (default: glpk.PT_PSE). Example usage
 	//
 	//     lp := glpk.New()
+	//     defer lp.Delete()
 	//     ...
 	//     smcp := glpk.NewSmcp()
 	//     smcp.SetPricing(glpk.PT_STD)
-	//     lp.Simplex(smcp)
+	//     if err := lp.Simplex(smcp); err != nil {
+	//             log.Fatal(err)
+	//     }
 	//
 	PT_STD = Pricing(C.GLP_PT_STD) // standard (Dantzig rule)
 	PT_PSE = Pricing(C.GLP_PT_PSE) // projected steepest edge
@@ -650,10 +658,13 @@ const (
 	// Ratio test techniques (default: glpk.RT_HAR). Example usage:
 	//
 	//     lp := glpk.New()
+	//     defer lp.Delete()
 	//     ...
 	//     smcp := glpk.NewSmcp()
 	//     smcp.SetRTest(glpk.RT_STD)
-	//     lp.Simplex(smcp)
+	//     if err := lp.Simplex(smcp); err != nil {
+	//             log.Fatal(err)
+	//     }
 	//
 	RT_STD = RTest(C.GLP_RT_STD) // standard (textbook)
 	RT_HAR = RTest(C.GLP_RT_HAR) // two-pass Harris' ratio test

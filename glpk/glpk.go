@@ -48,44 +48,45 @@ import (
 // #include <stdlib.h>
 import "C"
 
-// Objective function direction (maximization or minimization).
+// ObjDir is used to specify objective function direction
+// (maximization or minimization).
 type ObjDir int
 
 const (
-	MAX = ObjDir(C.GLP_MAX) // MAX represents maximization
-	MIN = ObjDir(C.GLP_MIN) // MIN represents minimization
+	MAX = ObjDir(C.GLP_MAX) // maximization
+	MIN = ObjDir(C.GLP_MIN) // minimization
 )
 
-// Bounds type of a variable
+// BndsType is used to specify bounds type of a variable.
 type BndsType int
 
 const (
-	FR = BndsType(C.GLP_FR) // FR represents a free (unbounded) variable
-	LO = BndsType(C.GLP_LO) // LO represents a lower-bounded variable
-	UP = BndsType(C.GLP_UP) // UP represents an upper-bounded variable
-	DB = BndsType(C.GLP_DB) // DB represents a double-bounded variable
-	FX = BndsType(C.GLP_FX) // FX represents a fixed variable
+	FR = BndsType(C.GLP_FR) // a free (unbounded) variable
+	LO = BndsType(C.GLP_LO) // a lower-bounded variable
+	UP = BndsType(C.GLP_UP) // an upper-bounded variable
+	DB = BndsType(C.GLP_DB) // a double-bounded variable
+	FX = BndsType(C.GLP_FX) // a fixed variable
 )
 
-// Solution Status
+// SolStat specifies solution status.
 type SolStat int
 
 const (
-	UNDEF  = SolStat(C.GLP_UNDEF)  // UNDEF indicates that solution is undefined
-	FEAS   = SolStat(C.GLP_FEAS)   // FEAS indicates that solution is feasible
-	INFEAS = SolStat(C.GLP_INFEAS) // INFEAS indicates that the solution is infeasible
-	NOFEAS = SolStat(C.GLP_NOFEAS) // NOFEAS indicates that there is no feasible solution
-	OPT    = SolStat(C.GLP_OPT)    // OPT indicates that the solution is optimal
-	UNBND  = SolStat(C.GLP_UNBND)  // UNBND indicates that the problem has unbounded solution
+	UNDEF  = SolStat(C.GLP_UNDEF)  // solution is undefined
+	FEAS   = SolStat(C.GLP_FEAS)   // solution is feasible
+	INFEAS = SolStat(C.GLP_INFEAS) // solution is infeasible
+	NOFEAS = SolStat(C.GLP_NOFEAS) // there is no feasible solution
+	OPT    = SolStat(C.GLP_OPT)    // solution is optimal
+	UNBND  = SolStat(C.GLP_UNBND)  // problem has unbounded solution
 )
 
-// Variable type (kind)
+// VarType is used to specify variable type (kind).
 type VarType int
 
 const (
-	CV = VarType(C.GLP_CV) // Contineous variable
+	CV = VarType(C.GLP_CV) // Contineous Variable
 	IV = VarType(C.GLP_IV) // Integer Variable
-	BV = VarType(C.GLP_BV) // Binary Variable. Equivalent to GLO_IV with 0<=iv<=1
+	BV = VarType(C.GLP_BV) // Binary Variable. Equivalent to IV with 0<=iv<=1
 )
 
 type prob struct {
@@ -473,6 +474,7 @@ const (
 	ERANGE  = OptError(C.GLP_ERANGE)  // result out of range
 )
 
+// Error implements the error interface.
 func (r OptError) Error() string {
 	switch r {
 	case EBADB:
@@ -631,7 +633,7 @@ func (s *Smcp) SetMeth(meth Meth) {
 type Pricing int
 
 const (
-	// Pricing techniques (default: glpk.PT_PSE). Example usage
+	// Pricing techniques (default: glpk.PT_PSE). Usage example:
 	//
 	//     lp := glpk.New()
 	//     defer lp.Delete()
@@ -655,7 +657,7 @@ func (s *Smcp) SetPricing(pricing Pricing) {
 type RTest int
 
 const (
-	// Ratio test techniques (default: glpk.RT_HAR). Example usage:
+	// Ratio test techniques (default: glpk.RT_HAR). Usage example:
 	//
 	//     lp := glpk.New()
 	//     defer lp.Delete()
@@ -820,11 +822,12 @@ const (
 // PathError is the error used by methods reading and writing MPS,
 // CPLEX LP, and GPLK LP/MIP formats.
 type PathError struct {
-	Op      string // either "read" or "write"
+	Op      string // operation (either "read" or "write")
 	Path    string // name of the file on which the operation was performed
 	Message string // short description of the problem
 }
 
+// Error implements the error interface.
 func (e *PathError) Error() string {
 	return e.Op + " " + e.Path + ": " + e.Message
 }

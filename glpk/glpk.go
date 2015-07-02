@@ -981,3 +981,15 @@ func (p *Prob) ReadProb(flags ProbRWFlags, filename string) error {
 	}
 	return nil
 }
+func (p *Iocp) SetMsgLev(lev MsgLev) {
+	p.iocp.msg_lev = C.int(lev)
+}
+
+// Returns value of the i-th row for MIP solution.
+func (p *Prob) MipRowVal(i int) float64 {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	val := C.glp_mip_row_val(p.p.p, C.int(i))
+	return float64(val)
+}

@@ -109,6 +109,34 @@ func TestSetGetColName(t *testing.T) {
 	lp.Delete()
 }
 
+func TestSetGetRowStat(t *testing.T) {
+	lp := New()
+	lp.AddRows(1)
+	// such values was selected for which get returns what was set
+	for _, stat := range []VarStat{BS, NF} {
+		lp.SetRowStat(1, stat)
+		got := lp.RowStat(1)
+		if got != stat {
+			t.Errorf("Got stat %d but %d was set", got, stat)
+		}
+	}
+	lp.Delete()
+}
+
+func TestSetGetColStat(t *testing.T) {
+	lp := New()
+	lp.AddCols(1)
+	// such values was selected for which get returns what was set
+	for _, stat := range []VarStat{BS, NS} {
+		lp.SetColStat(1, stat)
+		got := lp.ColStat(1)
+		if got != stat {
+			t.Errorf("Got stat %d but %d was set", got, stat)
+		}
+	}
+	lp.Delete()
+}
+
 func CmpIndicesData(ind []int32, data []float64, ind2 []int32, data2 []float64) bool {
 	if len(ind) != len(data) || len(ind2) != len(data2) || len(ind) != len(ind2) {
 		return false

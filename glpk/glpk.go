@@ -443,8 +443,36 @@ func (p *Prob) MatCol(j int) (ind []int32, val []float64) {
 // glp_get_sjj
 // glp_scale_prob
 // glp_unscale_prob
-// glp_set_row_stat
-// glp_set_col_stat
+
+// VarStat represents status of auxiliary/structural variable.
+type VarStat int
+
+const (
+	BS = VarStat(C.GLP_BS) // basic variable
+	NL = VarStat(C.GLP_NL) // non-basic variable on lower bound
+	NU = VarStat(C.GLP_NU) // non-basic variable on upper bound
+	NF = VarStat(C.GLP_NF) // non-basic free (unbounded) variable
+	NS = VarStat(C.GLP_NS) // non-basic fixed variable
+)
+
+// SetRowStat sets the current status of i-th row (auxiliary variable)
+// as specified by the stat argument.
+func (p *Prob) SetRowStat(i int, stat VarStat) {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	C.glp_set_row_stat(p.p.p, C.int(i), C.int(stat))
+}
+
+// SetColStat sets the current status of j-th column (structural
+// variable) as specified by the stat argument.
+func (p *Prob) SetColStat(j int, stat VarStat) {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	C.glp_set_col_stat(p.p.p, C.int(j), C.int(stat))
+}
+
 // glp_std_basis
 // glp_adv_basis
 // glp_cpx_basis
@@ -709,11 +737,26 @@ func (p *Prob) ObjVal() float64 {
 	return float64(C.glp_get_obj_val(p.p.p))
 }
 
+// RowStat returns the current status of i-th row auxiliary variable.
+func (p *Prob) RowStat(i int) VarStat {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	return VarStat(C.glp_get_row_stat(p.p.p, C.int(i)))
+}
+
 // TODO:
-// glp_get_row_stat
 // glp_get_row_prim
 // glp_get_row_dual
-// glp_get_col_stat
+
+// ColStat returns the current status of j-th column structural
+// variable.
+func (p *Prob) ColStat(j int) VarStat {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	return VarStat(C.glp_get_col_stat(p.p.p, C.int(j)))
+}
 
 // ColPrim returns primal value of the variable associated with j-th
 // column.

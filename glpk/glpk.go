@@ -373,13 +373,63 @@ func (p *Prob) ColKind(j int) VarType {
 	return VarType(C.glp_get_col_kind(p.p.p, C.int(j)))
 }
 
-// TODO:
-// glp_get_row_type
-// glp_get_row_lb
-// glp_get_row_ub
-// glp_get_col_type
-// glp_get_col_lb
-// glp_get_col_ub
+// RowType returns the type of i-th row, i.e. the type of the
+// corresponding auxiliary variable.
+func (p *Prob) RowType(i int) BndsType {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	return BndsType(C.glp_get_row_type(p.p.p, C.int(i)))
+}
+
+// RowLB returns the lower bound of i-th row, i.e. the lower bound of
+// the corresponding auxiliary variable. If the row has no lower bound
+// -math.MaxFloat64 is returned.
+func (p *Prob) RowLB(i int) float64 {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	return float64(C.glp_get_row_lb(p.p.p, C.int(i)))
+}
+
+// RowUB returns the upper bound of i-th row, i.e. the upper bound of
+// the corresponding auxiliary variable. If the row has no upper bound
+// +math.MaxFloat64 is returned.
+func (p *Prob) RowUB(i int) float64 {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	return float64(C.glp_get_row_ub(p.p.p, C.int(i)))
+}
+
+// ColType returns the type of j-th column, i.e. the type of the
+// corresponding structural variable.
+func (p *Prob) ColType(j int) BndsType {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	return BndsType(C.glp_get_col_type(p.p.p, C.int(j)))
+}
+
+// ColLB returns the lower bound of j-th column, i.e. the lower bound
+// of the corresponding structural variable. I the column has no lower
+// bound -math.MaxFloat64 is returned.
+func (p *Prob) ColLB(j int) float64 {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	return float64(C.glp_get_col_lb(p.p.p, C.int(j)))
+}
+
+// ColUB returns the upper bound of j-th column, i.e. the upper bound
+// of the corresponding structural variable. I the column has no upper
+// bound +math.MaxFloat64 is returned.
+func (p *Prob) ColUB(j int) float64 {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	return float64(C.glp_get_col_ub(p.p.p, C.int(j)))
+}
 
 // ObjCoef returns objective function coefficient of j-th column.
 func (p *Prob) ObjCoef(j int) float64 {

@@ -109,6 +109,59 @@ func TestSetGetColName(t *testing.T) {
 	lp.Delete()
 }
 
+var bndsExpected = []struct {
+	typ    BndsType
+	lb, ub float64
+}{
+	{FR, -math.MaxFloat64, math.MaxFloat64},
+	{LO, 3.2, math.MaxFloat64},
+	{UP, -math.MaxFloat64, 7.5},
+	{DB, 3.2, 7.5},
+	{FX, 3.2, 3.2},
+}
+
+func TestSetGetRowBnds(t *testing.T) {
+	lp := New()
+	lp.AddRows(1)
+	for _, expected := range bndsExpected {
+		lp.SetRowBnds(1, expected.typ, 3.2, 7.5)
+		typ := lp.RowType(1)
+		if typ != expected.typ {
+			t.Errorf("Got type %d but %d was set", typ, expected.typ)
+		}
+		lb := lp.RowLB(1)
+		if lb != expected.lb {
+			t.Errorf("Got lower bound %g but %g was expected", lb, expected.lb)
+		}
+		ub := lp.RowUB(1)
+		if ub != expected.ub {
+			t.Errorf("Got upper bound %g but %g was expected", ub, expected.ub)
+		}
+	}
+	lp.Delete()
+}
+
+func TestSetGetColBnds(t *testing.T) {
+	lp := New()
+	lp.AddCols(1)
+	for _, expected := range bndsExpected {
+		lp.SetColBnds(1, expected.typ, 3.2, 7.5)
+		typ := lp.ColType(1)
+		if typ != expected.typ {
+			t.Errorf("Got type %s but %s was set", typ, expected.typ)
+		}
+		lb := lp.ColLB(1)
+		if lb != expected.lb {
+			t.Errorf("Got lower bound %g but %g was expected", lb, expected.lb)
+		}
+		ub := lp.ColUB(1)
+		if ub != expected.ub {
+			t.Errorf("Got upper bound %g but %g was expected", ub, expected.ub)
+		}
+	}
+	lp.Delete()
+}
+
 func TestSetGetRowStat(t *testing.T) {
 	lp := New()
 	lp.AddRows(1)

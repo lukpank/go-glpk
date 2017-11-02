@@ -38,6 +38,7 @@
 package glpk
 
 import (
+	"fmt"
 	"reflect"
 	"runtime"
 	"unsafe"
@@ -214,6 +215,11 @@ func (p *Prob) SetRowBnds(i int, type_ BndsType, lb float64, ub float64) {
 	if p.p.p == nil {
 		panic("Prob method called on a deleted problem")
 	}
+
+	if lb >= ub {
+		panic(fmt.Sprintf("row: lower bound >= upper bound, %f >= %f", lb, ub))
+	}
+
 	C.glp_set_row_bnds(p.p.p, C.int(i), C.int(type_), C.double(lb), C.double(ub))
 }
 
@@ -222,6 +228,11 @@ func (p *Prob) SetColBnds(j int, type_ BndsType, lb float64, ub float64) {
 	if p.p.p == nil {
 		panic("Prob method called on a deleted problem")
 	}
+
+	if lb >= ub {
+		panic(fmt.Sprintf("col: lower bound >= upper bound, %f >= %f", lb, ub))
+	}
+
 	C.glp_set_col_bnds(p.p.p, C.int(j), C.int(type_), C.double(lb), C.double(ub))
 }
 

@@ -38,6 +38,7 @@
 package glpk
 
 import (
+	"fmt"
 	"reflect"
 	"runtime"
 	"unsafe"
@@ -214,6 +215,11 @@ func (p *Prob) SetRowBnds(i int, type_ BndsType, lb float64, ub float64) {
 	if p.p.p == nil {
 		panic("Prob method called on a deleted problem")
 	}
+
+	if lb >= ub {
+		panic(fmt.Sprintf("row: lower bound >= upper bound, %f >= %f", lb, ub))
+	}
+
 	C.glp_set_row_bnds(p.p.p, C.int(i), C.int(type_), C.double(lb), C.double(ub))
 }
 
@@ -222,6 +228,11 @@ func (p *Prob) SetColBnds(j int, type_ BndsType, lb float64, ub float64) {
 	if p.p.p == nil {
 		panic("Prob method called on a deleted problem")
 	}
+
+	if lb >= ub {
+		panic(fmt.Sprintf("col: lower bound >= upper bound, %f >= %f", lb, ub))
+	}
+
 	C.glp_set_col_bnds(p.p.p, C.int(j), C.int(type_), C.double(lb), C.double(ub))
 }
 
@@ -1073,4 +1084,16 @@ func (p *Prob) ReadProb(flags ProbRWFlags, filename string) error {
 		return &PathError{"read", filename, "GLPK LP/MIP reading error"}
 	}
 	return nil
+}
+func (p *Iocp) SetMsgLev(lev MsgLev) {
+	p.iocp.msg_lev = C.int(lev)
+}
+
+// Returns value of the i-th row for MIP solution.
+func (p *Prob) MipRowVal(i int) float64 {
+	if p.p.p == nil {
+		panic("Prob method called on a deleted problem")
+	}
+	val := C.glp_mip_row_val(p.p.p, C.int(i))
+	return float64(val)
 }

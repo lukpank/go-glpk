@@ -845,6 +845,10 @@ func (p *Iocp) SetPresolve(on bool) {
 	}
 }
 
+func (p *Iocp) SetMsgLev(lev MsgLev) {
+	p.iocp.msg_lev = C.int(lev)
+}
+
 // Create and initialize a new Iocp struct, which is used
 // by the branch-and-cut solver.
 func NewIocp() *Iocp {

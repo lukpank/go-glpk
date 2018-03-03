@@ -148,7 +148,7 @@ func TestSetGetColBnds(t *testing.T) {
 		lp.SetColBnds(1, expected.typ, 3.2, 7.5)
 		typ := lp.ColType(1)
 		if typ != expected.typ {
-			t.Errorf("Got type %s but %s was set", typ, expected.typ)
+			t.Errorf("Got type %d but %d was set", typ, expected.typ)
 		}
 		lb := lp.ColLB(1)
 		if lb != expected.lb {

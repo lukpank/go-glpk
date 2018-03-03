@@ -23,7 +23,7 @@
 // You should have received a copy of the GNU General Public License
 // along with glpk package. If not, see <http://www.gnu.org/licenses/>.
 
-// Go bindings for GLPK (GNU Linear Programming Kit).
+// Package glpk contains Go bindings for GLPK (GNU Linear Programming Kit).
 //
 // For usage examples see https://github.com/lukpank/go-glpk#examples.
 //
@@ -51,6 +51,7 @@ import "C"
 // (maximization or minimization).
 type ObjDir int
 
+// Allowed values of type ObjDir (objective function direction).
 const (
 	MAX = ObjDir(C.GLP_MAX) // maximization
 	MIN = ObjDir(C.GLP_MIN) // minimization
@@ -59,6 +60,7 @@ const (
 // BndsType is used to specify bounds type of a variable.
 type BndsType int
 
+// Allowed values of type BndsType (bounds type of a variable).
 const (
 	FR = BndsType(C.GLP_FR) // a free (unbounded) variable
 	LO = BndsType(C.GLP_LO) // a lower-bounded variable
@@ -70,6 +72,7 @@ const (
 // SolStat specifies solution status.
 type SolStat int
 
+// Allowed values of type SolStat (solution status).
 const (
 	UNDEF  = SolStat(C.GLP_UNDEF)  // solution is undefined
 	FEAS   = SolStat(C.GLP_FEAS)   // solution is feasible
@@ -82,6 +85,7 @@ const (
 // VarType is used to specify variable type (kind).
 type VarType int
 
+// Allowed values of type VarType (variable type).
 const (
 	CV = VarType(C.GLP_CV) // Contineous Variable
 	IV = VarType(C.GLP_IV) // Integer Variable
@@ -96,7 +100,6 @@ type prob struct {
 type Prob struct {
 	p *prob
 }
-
 
 // New creates a new optimization problem.
 func New() *Prob {
@@ -489,6 +492,7 @@ func (p *Prob) MatCol(j int) (ind []int32, val []float64) {
 // VarStat represents status of auxiliary/structural variable.
 type VarStat int
 
+// Allowed values of type VarStat (status of auxiliary/structural variable).
 const (
 	BS = VarStat(C.GLP_BS) // basic variable
 	NL = VarStat(C.GLP_NL) // non-basic variable on lower bound
@@ -519,9 +523,10 @@ func (p *Prob) SetColStat(j int, stat VarStat) {
 // glp_adv_basis
 // glp_cpx_basis
 
-// Optimization Error
+// OptError represents optimization error.
 type OptError int
 
+// Allowed values of type OptError (optimization error).
 const (
 	EBADB   = OptError(C.GLP_EBADB)   // invalid basis
 	ESING   = OptError(C.GLP_ESING)   // singular matrix
@@ -647,11 +652,13 @@ func NewSmcp() *Smcp {
 	return s
 }
 
-// Message level
+// MsgLev represents message level.
 type MsgLev int
 
+// Allowed values of type MsgLev (message level, default:
+// glpk.MSG_ALL).
 const (
-	// Message levels (default: glpk.MSG_ALL). Usage example:
+	// Usage example:
 	//
 	//     lp := glpk.New()
 	//     defer lp.Delete()
@@ -674,11 +681,12 @@ func (s *Smcp) SetMsgLev(lev MsgLev) {
 	s.smcp.msg_lev = C.int(lev)
 }
 
-// Simplex method option
+// Meth represents simplex method option.
 type Meth int
 
+// Allowed values of type Meth (simplex method option, default: glpk.PRIMAL).
 const (
-	// Simplex method options (default: glpk.PRIMAL). Usage example:
+	// Usage example:
 	//
 	//     lp := glpk.New()
 	//     defer lp.Delete()
@@ -699,11 +707,13 @@ func (s *Smcp) SetMeth(meth Meth) {
 	s.smcp.meth = C.int(meth)
 }
 
-// Pricing technique
+// Pricing represents pricing technique.
 type Pricing int
 
+// Allowed values of type Pricing (pricing technique, default:
+// glpk.PT_PSE).
 const (
-	// Pricing techniques (default: glpk.PT_PSE). Usage example:
+	// Usage example:
 	//
 	//     lp := glpk.New()
 	//     defer lp.Delete()
@@ -723,11 +733,13 @@ func (s *Smcp) SetPricing(pricing Pricing) {
 	s.smcp.pricing = C.int(pricing)
 }
 
-// Ratio test technique
+// RTest represents ratio test technique.
 type RTest int
 
+// Allowed values of type RTest (ratio test technique, default:
+// glpk.RT_HAR).
 const (
-	// Ratio test techniques (default: glpk.RT_HAR). Usage example:
+	// Usage example:
 	//
 	//     lp := glpk.New()
 	//     defer lp.Delete()
@@ -820,7 +832,7 @@ type Iocp struct {
 	iocp C.glp_iocp
 }
 
-// Checks whether the optional MIP presolver is enabled.
+// Presolve checks whether the optional MIP presolver is enabled.
 func (p *Iocp) Presolve() bool {
 	if p.iocp.presolve == C.GLP_ON {
 		return true
@@ -828,7 +840,7 @@ func (p *Iocp) Presolve() bool {
 	return false
 }
 
-// Enables or disables the optional MIP presolver.
+// SetPresolve enables or disables the optional MIP presolver.
 func (p *Iocp) SetPresolve(on bool) {
 	if on {
 		p.iocp.presolve = C.GLP_ON
@@ -837,11 +849,12 @@ func (p *Iocp) SetPresolve(on bool) {
 	}
 }
 
+// SetMsgLev sets message level.
 func (p *Iocp) SetMsgLev(lev MsgLev) {
 	p.iocp.msg_lev = C.int(lev)
 }
 
-// Create and initialize a new Iocp struct, which is used
+// NewIocp creates and initializes a new Iocp struct, which is used
 // by the branch-and-cut solver.
 func NewIocp() *Iocp {
 	p := new(Iocp)
@@ -849,7 +862,7 @@ func NewIocp() *Iocp {
 	return p
 }
 
-// Solve MIP problem with the branch-and-cut method.
+// Intopt solves MIP problem with the branch-and-cut method.
 func (p *Prob) Intopt(params *Iocp) error {
 	if p.p.p == nil {
 		panic("Prob method called on a deleted problem")
@@ -869,7 +882,7 @@ func (p *Prob) MipStatus() SolStat {
 	return SolStat(C.glp_mip_status(p.p.p))
 }
 
-// Returns value of the j-th column for MIP solution.
+// MipColVal returns value of the j-th column for MIP solution.
 func (p *Prob) MipColVal(i int) float64 {
 	if p.p.p == nil {
 		panic("Prob method called on a deleted problem")
@@ -878,7 +891,7 @@ func (p *Prob) MipColVal(i int) float64 {
 	return float64(val)
 }
 
-// Returns value of the objective function for MIP solution.
+// MipObjVal returns value of the objective function for MIP solution.
 func (p *Prob) MipObjVal() float64 {
 	if p.p.p == nil {
 		panic("Prob method called on a deleted problem")
@@ -887,14 +900,15 @@ func (p *Prob) MipObjVal() float64 {
 	return float64(val)
 }
 
-// MPS file format: either fixed (ancient) or free (modern) format.
+// MPSFormat represents MPS file format: either fixed (ancient) or
+// free (modern) format.
 type MPSFormat int
 
+// MPS file format type (fixed or free).
 const (
-	// MPS file format type (fixed or free). To read an MPS
-	// (fixed) file and switch to maximization (as MPS format does
-	// not specify objective function direction and GLPK assumes
-	// minimization) run
+	//  To read an MPS (fixed) file and switch to maximization (as
+	//  MPS format does not specify objective function direction
+	//  and GLPK assumes minimization) run
 	//
 	//     lp := glpk.New()
 	//     defer lp.Delete()

@@ -39,7 +39,6 @@ package glpk
 
 import (
 	"reflect"
-	"runtime"
 	"unsafe"
 )
 
@@ -98,17 +97,10 @@ type Prob struct {
 	p *prob
 }
 
-func finalizeProb(p *prob) {
-	if p.p != nil {
-		C.glp_delete_prob(p.p)
-		p.p = nil
-	}
-}
 
 // New creates a new optimization problem.
 func New() *Prob {
 	p := &prob{C.glp_create_prob()}
-	runtime.SetFinalizer(p, finalizeProb)
 	return &Prob{p}
 }
 

@@ -202,19 +202,19 @@ func (p *Prob) SetColKind(j int, kind VarType) {
 }
 
 // SetRowBnds sets row bounds
-func (p *Prob) SetRowBnds(i int, type_ BndsType, lb float64, ub float64) {
+func (p *Prob) SetRowBnds(i int, typ BndsType, lb float64, ub float64) {
 	if p.p.p == nil {
 		panic("Prob method called on a deleted problem")
 	}
-	C.glp_set_row_bnds(p.p.p, C.int(i), C.int(type_), C.double(lb), C.double(ub))
+	C.glp_set_row_bnds(p.p.p, C.int(i), C.int(typ), C.double(lb), C.double(ub))
 }
 
 // SetColBnds sets column bounds
-func (p *Prob) SetColBnds(j int, type_ BndsType, lb float64, ub float64) {
+func (p *Prob) SetColBnds(j int, typ BndsType, lb float64, ub float64) {
 	if p.p.p == nil {
 		panic("Prob method called on a deleted problem")
 	}
-	C.glp_set_col_bnds(p.p.p, C.int(j), C.int(type_), C.double(lb), C.double(ub))
+	C.glp_set_col_bnds(p.p.p, C.int(j), C.int(typ), C.double(lb), C.double(ub))
 }
 
 // SetObjCoef sets objective function coefficient of j-th column.
@@ -238,9 +238,9 @@ func (p *Prob) SetMatRow(i int, ind []int32, val []float64) {
 	if len(ind) != len(val) {
 		panic("len(ind) and len(val) should be equal")
 	}
-	ind_ := (*reflect.SliceHeader)(unsafe.Pointer(&ind))
-	val_ := (*reflect.SliceHeader)(unsafe.Pointer(&val))
-	C.glp_set_mat_row(p.p.p, C.int(i), C.int(len(ind)-1), (*C.int)(unsafe.Pointer(ind_.Data)), (*C.double)(unsafe.Pointer(val_.Data)))
+	indH := (*reflect.SliceHeader)(unsafe.Pointer(&ind))
+	valH := (*reflect.SliceHeader)(unsafe.Pointer(&val))
+	C.glp_set_mat_row(p.p.p, C.int(i), C.int(len(ind)-1), (*C.int)(unsafe.Pointer(indH.Data)), (*C.double)(unsafe.Pointer(valH.Data)))
 }
 
 // SetMatCol sets (replaces) j-th column. It sets
@@ -256,9 +256,9 @@ func (p *Prob) SetMatCol(j int, ind []int32, val []float64) {
 	if len(ind) != len(val) {
 		panic("len(ind) and len(val) should be equal")
 	}
-	ind_ := (*reflect.SliceHeader)(unsafe.Pointer(&ind))
-	val_ := (*reflect.SliceHeader)(unsafe.Pointer(&val))
-	C.glp_set_mat_col(p.p.p, C.int(j), C.int(len(ind)-1), (*C.int)(unsafe.Pointer(ind_.Data)), (*C.double)(unsafe.Pointer(val_.Data)))
+	indH := (*reflect.SliceHeader)(unsafe.Pointer(&ind))
+	valH := (*reflect.SliceHeader)(unsafe.Pointer(&val))
+	C.glp_set_mat_col(p.p.p, C.int(j), C.int(len(ind)-1), (*C.int)(unsafe.Pointer(indH.Data)), (*C.double)(unsafe.Pointer(valH.Data)))
 }
 
 // LoadMatrix replaces all of the constraint matrix. It sets
@@ -274,10 +274,10 @@ func (p *Prob) LoadMatrix(ia, ja []int32, ar []float64) {
 	if len(ia) != len(ja) || len(ia) != len(ar) {
 		panic("len(ia) and len(ja) and len(ar) should be equal")
 	}
-	ia_ := (*reflect.SliceHeader)(unsafe.Pointer(&ia))
-	ja_ := (*reflect.SliceHeader)(unsafe.Pointer(&ja))
-	ar_ := (*reflect.SliceHeader)(unsafe.Pointer(&ar))
-	C.glp_load_matrix(p.p.p, C.int(len(ia)-1), (*C.int)(unsafe.Pointer(ia_.Data)), (*C.int)(unsafe.Pointer(ja_.Data)), (*C.double)(unsafe.Pointer(ar_.Data)))
+	iaH := (*reflect.SliceHeader)(unsafe.Pointer(&ia))
+	jaH := (*reflect.SliceHeader)(unsafe.Pointer(&ja))
+	arH := (*reflect.SliceHeader)(unsafe.Pointer(&ar))
+	C.glp_load_matrix(p.p.p, C.int(len(ia)-1), (*C.int)(unsafe.Pointer(iaH.Data)), (*C.int)(unsafe.Pointer(jaH.Data)), (*C.double)(unsafe.Pointer(arH.Data)))
 }
 
 // TODO:
@@ -291,13 +291,13 @@ func (p *Prob) Copy(names bool) *Prob {
 		panic("Prob method called on a deleted problem")
 	}
 	q := &Prob{&prob{C.glp_create_prob()}}
-	var names_ C.int
+	var namesC C.int
 	if names {
-		names_ = C.GLP_ON
+		namesC = C.GLP_ON
 	} else {
-		names_ = C.GLP_OFF
+		namesC = C.GLP_OFF
 	}
-	C.glp_copy_prob(q.p.p, p.p.p, names_)
+	C.glp_copy_prob(q.p.p, p.p.p, namesC)
 	return q
 }
 
@@ -448,9 +448,9 @@ func (p *Prob) MatRow(i int) (ind []int32, val []float64) {
 	length := C.glp_get_mat_row(p.p.p, C.int(i), nil, nil)
 	ind = make([]int32, length+1)
 	val = make([]float64, length+1)
-	ind_ := (*reflect.SliceHeader)(unsafe.Pointer(&ind))
-	val_ := (*reflect.SliceHeader)(unsafe.Pointer(&val))
-	C.glp_get_mat_row(p.p.p, C.int(i), (*C.int)(unsafe.Pointer(ind_.Data)), (*C.double)(unsafe.Pointer(val_.Data)))
+	indH := (*reflect.SliceHeader)(unsafe.Pointer(&ind))
+	valH := (*reflect.SliceHeader)(unsafe.Pointer(&val))
+	C.glp_get_mat_row(p.p.p, C.int(i), (*C.int)(unsafe.Pointer(indH.Data)), (*C.double)(unsafe.Pointer(valH.Data)))
 	return
 }
 
@@ -468,9 +468,9 @@ func (p *Prob) MatCol(j int) (ind []int32, val []float64) {
 	length := C.glp_get_mat_col(p.p.p, C.int(j), nil, nil)
 	ind = make([]int32, length+1)
 	val = make([]float64, length+1)
-	ind_ := (*reflect.SliceHeader)(unsafe.Pointer(&ind))
-	val_ := (*reflect.SliceHeader)(unsafe.Pointer(&val))
-	C.glp_get_mat_col(p.p.p, C.int(j), (*C.int)(unsafe.Pointer(ind_.Data)), (*C.double)(unsafe.Pointer(val_.Data)))
+	indH := (*reflect.SliceHeader)(unsafe.Pointer(&ind))
+	valH := (*reflect.SliceHeader)(unsafe.Pointer(&val))
+	C.glp_get_mat_col(p.p.p, C.int(j), (*C.int)(unsafe.Pointer(indH.Data)), (*C.double)(unsafe.Pointer(valH.Data)))
 	return
 }
 
@@ -743,8 +743,8 @@ const (
 )
 
 // SetRTest sets ratio test technique (default: glpk.RT_HAR)
-func (s *Smcp) SetRTest(r_test RTest) {
-	s.smcp.r_test = C.int(r_test)
+func (s *Smcp) SetRTest(rTest RTest) {
+	s.smcp.r_test = C.int(rTest)
 }
 
 // Status returns status of the basic solution.
